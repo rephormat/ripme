@@ -38,12 +38,28 @@ public class XvideosRipper extends AbstractSingleFileRipper {
     public String getDomain() {
         return HOST + ".com";
     }
+    
+    @Override
+    public URL sanitizeURL(URL url) throws MalformedURLException {
+        String URLToReturn = url.toExternalForm();
+        URL san_url = new URL(URLToReturn.replaceAll("prof-video-click/upload/\\w+/", "video"));
+        LOGGER.info("sanitized URL is " + san_url.toExternalForm());
+        return san_url;
+    }
 
     @Override
     public boolean canRip(URL url) {
         Pattern p = Pattern.compile("^https?://[wm.]*xvideos\\.com/video[0-9]+.*$");
         Matcher m = p.matcher(url.toExternalForm());
-        return m.matches();
+        if (m.matches()) {
+            return true;
+        }
+        p = Pattern.compile("^https?://[wm.]*xvideos\\.com/prof-video-click/upload/\\w+/[0-9]+.*$");
+        m = p.matcher(url.toExternalForm());
+        if (m.matches()) {
+            return true;
+        }
+        return false;
     }
 
     @Override
