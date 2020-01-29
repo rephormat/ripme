@@ -22,22 +22,22 @@ public class StufferdbRipper extends AbstractHTMLRipper {
 
     @Override
     public String getHost() {
-        return "imgbox";
+        return "stufferdb";
     }
     @Override
     public String getDomain() {
-        return "imgbox.com";
+        return "stufferdb.com";
     }
 
     @Override
     public String getGID(URL url) throws MalformedURLException {
-        Pattern p = Pattern.compile("^https?://[wm.]*imgbox\\.com/g/([a-zA-Z0-9]+).*$");
+        Pattern p = Pattern.compile("^https?://[wm.]*stufferdb\\.com/picture.php\\?/([0-9]+)/category/([0-9]+).*$");
         Matcher m = p.matcher(url.toExternalForm());
         if (m.matches()) {
             return m.group(1);
         }
-        throw new MalformedURLException("Expected imgbox.com URL format: " +
-                        "imgbox.com/g/albumid - got " + url + "instead");
+        throw new MalformedURLException("Expected stufferdb.com URL format: " +
+                        "stufferdb.com/index.php?/category/id - got " + url + " instead");
     }
 
     @Override
@@ -46,14 +46,12 @@ public class StufferdbRipper extends AbstractHTMLRipper {
     }
     @Override
     public List<String> getURLsFromPage(Document doc) {
-        List<String> imageURLs = new ArrayList<>();
-        for (Element thumb : doc.select("div.boxed-content > a > img")) {
-            String image = thumb.attr("src").replaceAll("thumbs", "images");
-            image = image.replace("_b", "_o");
-            image = image.replaceAll("\\d-s", "i");
-            imageURLs.add(image);
+        List<String> results = new ArrayList<>();
+        for (Element thumb : doc.select("video > source")) {
+            String video = thumb.attr("src").replace("https", "http");
+            results.add(video);
         }
-        return imageURLs;
+        return results;
     }
     @Override
     public void downloadURL(URL url, int index) {
