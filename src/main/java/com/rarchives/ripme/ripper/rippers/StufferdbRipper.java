@@ -31,8 +31,13 @@ public class StufferdbRipper extends AbstractHTMLRipper {
 
     @Override
     public String getGID(URL url) throws MalformedURLException {
-        Pattern p = Pattern.compile("^https?://[wm.]*stufferdb\\.com/picture.php\\?/([0-9]+)/category/([0-9]+).*$");
+        Pattern p = Pattern.compile("^https?://stufferdb\\.com/index.php\\?/category/([0-9]+).*$");
         Matcher m = p.matcher(url.toExternalForm());
+        if (m.matches()) {
+            return m.group(1);
+        }
+        p = Pattern.compile("^https?://stufferdb\\.com/picture.php\\?/([0-9]+)/category/([0-9]+).*$");
+        m = p.matcher(url.toExternalForm());
         if (m.matches()) {
             return m.group(1);
         }
@@ -41,14 +46,56 @@ public class StufferdbRipper extends AbstractHTMLRipper {
     }
 
     @Override
+    public List<String> getAlbumsToQueue(Document doc) {
+        List<String> urlsToAddToQueue = new ArrayList<>();
+        LOGGER.info("getting albums");
+        for (Element elem : doc.select("ul#thumbnails > li.gdthumb > a")) {
+            urlsToAddToQueue.add(getDomain() + "/" + elem.attr("href"));
+        }
+        LOGGER.info(doc.html());
+        return urlsToAddToQueue;
+    }
+
+    @Override
+    public boolean hasQueueSupport() {
+        return true;
+    }
+
+    @Override
+    public boolean pageContainsAlbums(URL url) {
+        Pattern p = Pattern.compile("^https?://stufferdb\\.com/index.php\\?/category/([0-9]+).*$");
+        Matcher m = p.matcher(url.toExternalForm());
+        LOGGER.info("Checking if page has albums");
+        LOGGER.info(m.matches());
+        return m.matches();
+    }
+
+    @Override
     public Document getFirstPage() throws IOException {
         return Http.url(url).get();
     }
+
+    @Override
+    public boolean canRip(URL url) {
+        Pattern p = Pattern.compile("^https?://stufferdb\\.com/index.php\\?/category/([0-9]+).*$");
+        Matcher m = p.matcher(url.toExternalForm());
+        if (m.matches()) {
+            return true;
+        }
+        p = Pattern.compile("^https?://stufferdb\\.com/picture.php\\?/([0-9]+)/category/([0-9]+).*$");
+        m = p.matcher(url.toExternalForm());
+        if (m.matches()) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public List<String> getURLsFromPage(Document doc) {
         List<String> results = new ArrayList<>();
         for (Element thumb : doc.select("video > source")) {
             String video = thumb.attr("src").replace("https", "http");
+            video = video.replace("stufferdb.com.", "stufferdb.com");
             results.add(video);
         }
         return results;
