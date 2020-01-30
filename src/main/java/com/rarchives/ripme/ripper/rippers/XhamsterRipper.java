@@ -83,8 +83,14 @@ public class XhamsterRipper extends AbstractHTMLRipper {
     public List<String> getAlbumsToQueue(Document doc) {
         List<String> urlsToAddToQueue = new ArrayList<>();
         LOGGER.info("getting albums");
-        for (Element elem : doc.select("div.item-container > a.item")) {
-            urlsToAddToQueue.add(elem.attr("href"));
+        if (!isVideoAlbumUrl(url)) {
+            for (Element elem : doc.select("div.item-container > a.item")) {
+                urlsToAddToQueue.add(elem.attr("href"));
+            }
+        } else {
+            for (Element elem : doc.select("li.thumb-list-mobile-item > a.mobile-video-thumb")) {
+                urlsToAddToQueue.add(elem.attr("href"));
+            }
         }
         LOGGER.info(doc.html());
         return urlsToAddToQueue;
@@ -133,6 +139,12 @@ public class XhamsterRipper extends AbstractHTMLRipper {
 
     private boolean isVideoUrl(URL url) {
         Pattern p = Pattern.compile("^https?://.*xhamster2?\\.(com|one|desi)/(movies|videos)/.*$");
+        Matcher m = p.matcher(url.toExternalForm());
+        return m.matches();
+    }
+
+    private boolean isVideoAlbumUrl(URL url) {
+        Pattern p = Pattern.compile("^https?://.*xhamster2?\\.(com|one|desi)/users/([a-zA-Z0-9_-]+)/videos$");
         Matcher m = p.matcher(url.toExternalForm());
         return m.matches();
     }
